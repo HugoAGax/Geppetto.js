@@ -1,0 +1,32 @@
+{
+  "name": "geppetto",
+  "version": "1.0.0",
+  "description": "Testing tool based on puppeteer.js",
+  "main": "script.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HugoAGax/Geppetto.js.git"
+  },
+  "keywords": [
+    "testing"
+  ],
+  "author": "Hugo A. Gaxiola",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HugoAGax/Geppetto.js/issues"
+  },
+  "homepage": "https://github.com/HugoAGax/Geppetto.js#readme",
+  "dependencies": {
+    "colors": "^1.4.0",
+    "fs": "0.0.1-security",
+    "mz": "^2.7.0",
+    "puppeteer": "^10.2.0",
+    "puppeteer-core": "^10.2.0"
+  }
+}

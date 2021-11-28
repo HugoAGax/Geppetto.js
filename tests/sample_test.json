@@ -14,7 +14,7 @@
     "tests": [
         {
             "name": "screenshots-test",
-            "url": "https://www.google.com/",
+            "url": "https://placeit.net/c/design-templates/stages/illustrated-instagram-post-creator-with-a-happy-hanukkah-message-4032g",
             "timeout": 20000,
             "authenticate": {
                 "key": "admin",
@@ -27,17 +27,13 @@
             },
             "screenshots": [
                 {
-                    "element": "document",
-                    "event": "scroll"
-                },
-                {
-                    "element": "document",
+                    "element": ".left.sidebar",
                     "event": "resize"
                 }
             ],
             "actions": [
                 {
-                    "element": "document",
+                    "element": "",
                     "event": "scroll",
                     "callback": "calculateSize"
                 }
@@ -58,11 +54,11 @@
             },
             "screenshots": [
                 {
-                    "element": "document",
+                    "element": null,
                     "event": "scroll"
                 },
                 {
-                    "element": "document",
+                    "element": null,
                     "event": "resize"
                 }
             ],

@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
-// const resemble = require('resemblejs');
 const fs = require('mz/fs');
 const colors = require('colors');
+const Test = require('./classes/test.js');
 
 var processArgs = process.argv.slice(2);
 const config = JSON.parse(fs.readFileSync(processArgs[0]));
@@ -13,33 +13,39 @@ async function createBrowserInstance(config) {
     const browser = await puppeteer.launch({
         ignoreDefaultArgs: ['--disable-extensions']
     });
-    
+
     try {
         const page = await browser.newPage();
         await page.setViewport(config.viewport);
         console.log(`---> Go To :: ${config.url}`.white);
         await page.goto(config.url);
-        await page.waitForTimeout(5000);
         console.log(`---> Fullpage Screenshot`.magenta);
-        await page.screenshot({
-            path: `./results/${config.name}/example.png`
-        });
-    
-        
-        if (config.screenshots[0].element !== null) {
+        // await page.screenshot({
+        //     path: `./results/${config.name}/example.png`
+        // });
+
+
+        if (config.screenshots !== null) {
             console.log(`---> Element Screenshot :: ${config.screenshots[0].element}`.cyan);
-            await screenshotDOMElement(page, {
-                path: `./results/${config.name}/element(${config.screenshots[0].element}).png`,
-                selector: config.screenshots[0].element,
-                padding: 5
-            });
+            await createTestImage(page, config.screenshots, config.name);
         }
+
     } catch {
         console.error(err.message);
     } finally {
         await browser.close();
     }
 };
+
+function createTestImage(page, screenshots, name) {
+    return Promise.all(screenshots.map(ss => {
+        return screenshotDOMElement(page, {
+            path: `./results/${name}/element(${ss.element}).png`,
+            selector: ss.element,
+            padding: 0
+        });
+    }));
+}
 
 function createResultDirectory(name) {
     console.log('name', name);
@@ -86,32 +92,9 @@ async function screenshotDOMElement(page, opts = {}) {
             height: rect.height + padding * 2
         }
     });
+
 }
 
-class Test {
-    constructor(params) {
-        Object.assign(this, params);
-        this.name = this.testName();
-    }
-    // Getter
-    testName() {
-        const date = this.getTestTime();
-        return `${this.name}(${date})`;
-    }
-    // Method
-    getTestTime() {
-
-        var currentdate = new Date();
-        return currentdate.getDate() + "-"
-            + (currentdate.getMonth() + 1) + "-"
-            + currentdate.getFullYear() + " "
-            + currentdate.getHours() + "H"
-            + currentdate.getMinutes() + "M"
-            + currentdate.getSeconds();+ "S"
-        const d = new Date();
-        return `${d.getMonth()}-${d.getDate()}-${d.getFullYear()}`;
-    }
-}
 async function runTests(testsToRun) {
     for (const run of testsToRun) {
         await createTestRun(run);
@@ -119,7 +102,7 @@ async function runTests(testsToRun) {
 }
 runTests(testsToRun);
 
-async function pHandler () {
+async function pHandler() {
     try {
         const data = await promise;
         return [data, null];

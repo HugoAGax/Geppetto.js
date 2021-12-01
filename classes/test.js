@@ -1,17 +1,22 @@
-class Test {
+module.exports = class Test {
     constructor(params) {
-        this.name = params.name;
-        this.url = params.url;
-        this.auth = params.autenticate;
+        Object.assign(this, params);
+        this.name = this.testName();
     }
     // Getter
-    get testName() {
-        const date = this.getCurrentDate(); 
-        return `${this.name}_${date}`;
+    testName() {
+        const date = this.getTestTime();
+        return `${this.name}(${date})`;
     }
     // Method
-    getCurrentDate() {
-        const d = new Date();
-        return `${d.getMonth()}-${d.getDate()}-${d.getFullYear()}`;
+    getTestTime() {
+
+        var currentdate = new Date();
+        return currentdate.getDate() + "-"
+            + (currentdate.getMonth() + 1) + "-"
+            + currentdate.getFullYear() + " "
+            + currentdate.getHours() + "H"
+            + currentdate.getMinutes() + "M"
+            + currentdate.getSeconds();+ "S"
     }
-};
+}

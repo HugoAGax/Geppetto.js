@@ -1,0 +1,77 @@
+{
+    "puppeteerConfig": {
+        "viewport": {
+            "width": 1200,
+            "height": 1080,
+            "deviceScaleFactor": 1
+        },
+        "browser": {
+            "executablePath": "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "devtools": false
+        }
+    },
+    "tests": [
+        {
+            "name": "screenshots-test",
+            "url": "https://placeit.net/c/design-templates/stages/illustrated-instagram-post-creator-with-a-happy-hanukkah-message-4032g",
+            "timeout": 20000,
+            "authenticate": {
+                "key": "admin",
+                "value": "memingo"
+            },
+            "viewport": {
+                "width": 1920,
+                "height": 1080,
+                "deviceScaleFactor": 1
+            },
+            "screenshots": [
+                {
+                    "element": ".left.sidebar",
+                    "event": "resize"
+                },
+                {
+                    "element": ".right.sidebar",
+                    "event": "resize"
+                }
+            ],
+            "actions": [
+                {
+                    "element": "",
+                    "event": "scroll",
+                    "callback": "calculateSize"
+                }
+            ]
+        },
+        {
+            "name": "screenshots-test",
+            "url": "https://placeit.net/c/design-templates/stages/illustrated-instagram-post-creator-with-a-happy-hanukkah-message-4032g",
+            "timeout": 20000,
+            "authenticate": {
+                "key": "admin",
+                "value": "memingo"
+            },
+            "viewport": {
+                "width": 1920,
+                "height": 1080,
+                "deviceScaleFactor": 1
+            },
+            "screenshots": [
+                {
+                    "element": ".left.sidebar",
+                    "event": "resize"
+                },
+                {
+                    "element": ".right.sidebar",
+                    "event": "resize"
+                }
+            ],
+            "actions": [
+                {
+                    "element": "",
+                    "event": "scroll",
+                    "callback": "calculateSize"
+                }
+            ]
+        }
+    ]
+}

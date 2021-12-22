@@ -1,7 +1,11 @@
 const puppeteer = require('puppeteer');
 const fs = require('mz/fs');
 const colors = require('colors');
+const lighthouse = require('lighthouse');
+
 const Test = require('./classes/test.js');
+// const ResultImages = require('./classes/result_images.js');
+// const LighthouseTest = require('./classes/lighthouse_test.js');
 
 var processArgs = process.argv.slice(2);
 const config = JSON.parse(fs.readFileSync(processArgs[0]));
@@ -14,28 +18,36 @@ async function createBrowserInstance(config) {
         ignoreDefaultArgs: ['--disable-extensions']
     });
 
-    try {
+    // try {
         const page = await browser.newPage();
         await page.setViewport(config.viewport);
         console.log(`---> Go To :: ${config.url}`.white);
         await page.goto(config.url);
         console.log(`---> Fullpage Screenshot`.magenta);
-        // await page.screenshot({
-        //     path: `./results/${config.name}/example.png`
-        // });
+        await page.screenshot({
+            path: `./results/${config.name}/example.png`
+        });
 
+        const lighthouseFlags = {
+            port: (new URL(browser.wsEndpoint())).port,
+            output: 'json',
+            logLevel: 'info',
+            maxWaitForLoad: 60 * 1000
+        }
 
         if (config.screenshots !== null) {
             console.log(`---> Element Screenshot :: ${config.screenshots[0].element}`.cyan);
             await createTestImage(page, config.screenshots, config.name);
         }
 
-    } catch {
-        console.error(err.message);
-    } finally {
+        await lighthouse(config.url, lighthouseFlags, getLighthouseConfig());
+
+    // } catch {
+    //     console.error(err);
+    // } finally {
         await browser.close();
-    }
-};
+    // }
+}
 
 function createTestImage(page, screenshots, name) {
     return Promise.all(screenshots.map(ss => {
@@ -47,6 +59,65 @@ function createTestImage(page, screenshots, name) {
     }));
 }
 
+function getLighthouseConfig(options) {
+    let lighthouseConfig = {
+        extends: 'lighthouse:default',
+        settings: {
+            onlyCategories: ['performance'],
+            //maxWaitForLoad: 10000
+        }
+    }
+
+    // if (options.desktop) {
+        // Settings taken from https://github.com/GoogleChrome/lighthouse/blob/master/lighthouse-core/config/constants.js
+        Object.assign(lighthouseConfig.settings, {
+            formFactor: 'desktop',
+            throttling: {
+                rttMs: 40,
+                throughputKbps: 10 * 1024,
+                cpuSlowdownMultiplier: 1,
+                requestLatencyMs: 0, // 0 means unset
+                downloadThroughputKbps: 0,
+                uploadThroughputKbps: 0,
+              },
+            screenEmulation: {
+                mobile: false,
+                width: 1350,
+                height: 940,
+                deviceScaleFactor: 1,
+                disabled: false,
+              },
+            emulatedUserAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4420.0 Safari/537.36 Chrome-Lighthouse'
+        })
+    // }
+
+    return lighthouseConfig
+}
+
+function getPuppeteerConfig (options) {
+    let puppeteerConfig = {
+        headless: false,
+        devtools: true
+    }
+    if (options.userDataDir) {
+        puppeteerConfig.userDataDir = options.userDataDir;
+        //'~/Library/Application\ Support/Google/Chrome\ Canary/'
+    }
+    if (options.executablePath) {
+        puppeteerConfig.executablePath = options.executablePath;
+        //'/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary'
+    }
+    if (options.desktop) {
+        puppeteerConfig.defaultViewport = {
+            width: 1920,
+            height: 1080
+        }
+    }
+    return puppeteerConfig;
+}
+
+
+
 function createResultDirectory(name) {
     console.log('name', name);
     var dir = `./results/${name}`;
@@ -54,7 +125,7 @@ function createResultDirectory(name) {
     if (fs.existsSync(dir) === false) {
         fs.mkdirSync(dir, { recursive: true });
     }
-};
+}
 
 async function createTestRun(test) {
     var currentTest = new Test(test);

@@ -1,169 +1,80 @@
+// External Dependencies
 const puppeteer = require('puppeteer');
 const fs = require('mz/fs');
 const colors = require('colors');
 const lighthouse = require('lighthouse');
 
+// Internal Modules
 const Test = require('./classes/test.js');
-// const ResultImages = require('./classes/result_images.js');
-// const LighthouseTest = require('./classes/lighthouse_test.js');
+const ResultImages = require('./classes/result_images.js');
+const LighthouseTest = require('./classes/lighthouse_test.js');
 
-var processArgs = process.argv.slice(2);
+
+const processArgs = process.argv.slice(2);
 const config = JSON.parse(fs.readFileSync(processArgs[0]));
 const testsToRun = config.tests;
-const puppeteerConfig = config.puppeteerConfig;
 
 
 async function createBrowserInstance(config) {
     const browser = await puppeteer.launch({
         ignoreDefaultArgs: ['--disable-extensions']
     });
+        
+    const page = await browser.newPage();
+    await page.setViewport(config.viewport);
+    await page.goto(config.url);
 
-    // try {
-        const page = await browser.newPage();
-        await page.setViewport(config.viewport);
-        console.log(`---> Go To :: ${config.url}`.white);
-        await page.goto(config.url);
-        console.log(`---> Fullpage Screenshot`.magenta);
-        await page.screenshot({
-            path: `./results/${config.name}/example.png`
+    console.log(('new Puppeteer Instance created \n' + config.url + '\n').underline.brightGreen);
+
+    if (config.screenshots !== null) {
+        var resultImagesInstance = new ResultImages({
+            page: page, 
+            name: config.name,
+            screenshots: config.screenshots
         });
-
-        const lighthouseFlags = {
-            port: (new URL(browser.wsEndpoint())).port,
-            output: 'json',
-            logLevel: 'info',
-            maxWaitForLoad: 60 * 1000
-        }
-
-        if (config.screenshots !== null) {
-            console.log(`---> Element Screenshot :: ${config.screenshots[0].element}`.cyan);
-            await createTestImage(page, config.screenshots, config.name);
-        }
-
-        await lighthouse(config.url, lighthouseFlags, getLighthouseConfig());
-
-    // } catch {
-    //     console.error(err);
-    // } finally {
-        await browser.close();
-    // }
-}
-
-function createTestImage(page, screenshots, name) {
-    return Promise.all(screenshots.map(ss => {
-        return screenshotDOMElement(page, {
-            path: `./results/${name}/element(${ss.element}).png`,
-            selector: ss.element,
-            padding: 0
-        });
-    }));
-}
-
-function getLighthouseConfig(options) {
-    let lighthouseConfig = {
-        extends: 'lighthouse:default',
-        settings: {
-            onlyCategories: ['performance'],
-            //maxWaitForLoad: 10000
-        }
+        await resultImagesInstance.createTestImages();
     }
 
-    // if (options.desktop) {
-        // Settings taken from https://github.com/GoogleChrome/lighthouse/blob/master/lighthouse-core/config/constants.js
-        Object.assign(lighthouseConfig.settings, {
-            formFactor: 'desktop',
-            throttling: {
-                rttMs: 40,
-                throughputKbps: 10 * 1024,
-                cpuSlowdownMultiplier: 1,
-                requestLatencyMs: 0, // 0 means unset
-                downloadThroughputKbps: 0,
-                uploadThroughputKbps: 0,
-              },
-            screenEmulation: {
-                mobile: false,
-                width: 1350,
-                height: 940,
-                deviceScaleFactor: 1,
-                disabled: false,
-              },
-            emulatedUserAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4420.0 Safari/537.36 Chrome-Lighthouse'
-        })
-    // }
-
-    return lighthouseConfig
-}
-
-function getPuppeteerConfig (options) {
-    let puppeteerConfig = {
-        headless: false,
-        devtools: true
+    const lighthouseFlags = {
+        port: (new URL(browser.wsEndpoint())).port,
+        output: 'json',
+        logLevel: 'info',
+        maxWaitForLoad: 60 * 1000
     }
-    if (options.userDataDir) {
-        puppeteerConfig.userDataDir = options.userDataDir;
-        //'~/Library/Application\ Support/Google/Chrome\ Canary/'
-    }
-    if (options.executablePath) {
-        puppeteerConfig.executablePath = options.executablePath;
-        //'/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary'
-    }
-    if (options.desktop) {
-        puppeteerConfig.defaultViewport = {
-            width: 1920,
-            height: 1080
-        }
-    }
-    return puppeteerConfig;
-}
 
+    var lighthouseInstance = new LighthouseTest({
+        name: config.name,
+        url: config.url,
+        lighthouse: lighthouse,
+        browser: browser,
+        config: config.lighthouseConfig,
+        flags: lighthouseFlags
+    });
 
-
-function createResultDirectory(name) {
-    console.log('name', name);
-    var dir = `./results/${name}`;
-
-    if (fs.existsSync(dir) === false) {
-        fs.mkdirSync(dir, { recursive: true });
-    }
+    await lighthouseInstance.runInstance();
+    // .then((data) => console.log(data));
+    await browser.close();
 }
 
 async function createTestRun(test) {
     var currentTest = new Test(test);
-    console.log(`Current Test :: ${currentTest.name}`.black.bgGreen);
+    console.log(colors.green('hello'));
+    console.log(`\nTEST STARTED >>> ${currentTest.name}`.black.bgGreen);
+
     createResultDirectory(currentTest.name);
     await createBrowserInstance(currentTest);
-    console.log(`Ended Test :: ${currentTest.name}`.black.bgRed);
+    
+    console.log(`\nTEST ENDED >>> ${currentTest.name}`.black.bgRed);
+    console.log('\n');
 }
 
-async function screenshotDOMElement(page, opts = {}) {
-    const padding = 'padding' in opts ? opts.padding : 0;
-    const path = 'path' in opts ? opts.path : null;
-    const selector = opts.selector;
+function createResultDirectory(name) {
+    var dir = `./results/${name}`;
+    console.log('results will be output to... ./results/' + name + '\n');
 
-    if (!selector)
-        throw Error('Please provide a selector.');
-
-    const rect = await page.evaluate(selector => {
-        const element = document.querySelector(selector);
-        if (!element)
-            return null;
-        const { x, y, width, height } = element.getBoundingClientRect();
-        return { left: x, top: y, width, height, id: element.id };
-    }, selector);
-
-    if (!rect)
-        throw Error(`Could not find element that matches selector: ${selector}.`);
-
-    return await page.screenshot({
-        path,
-        clip: {
-            x: rect.left - padding,
-            y: rect.top - padding,
-            width: rect.width + padding * 2,
-            height: rect.height + padding * 2
-        }
-    });
-
+    if (fs.existsSync(dir) === false) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
 }
 
 async function runTests(testsToRun) {
@@ -172,13 +83,3 @@ async function runTests(testsToRun) {
     }
 }
 runTests(testsToRun);
-
-async function pHandler() {
-    try {
-        const data = await promise;
-        return [data, null];
-    } catch (err) {
-        console.error(err);
-        return [null, err]
-    }
-}

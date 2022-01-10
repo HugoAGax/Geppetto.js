@@ -1,6 +1,6 @@
-module.exports = class ResultImages {
+export default class ResultImages {
     constructor(params) {
-        console.log(('new Result Images FOR ' + params.name + '\n').underline.brightMagenta);
+        // console.log(('new Result Images FOR ' + params.name + '\n'));
         Object.assign(this, params);
     }
 
@@ -8,7 +8,7 @@ module.exports = class ResultImages {
         const resultImages = this;
 
         return Promise.all(screenshots.map(ss => {
-            console.log(`\tElement Screenshot :: ${ss.element}`.cyan);
+            // console.log(`\tElement Screenshot :: ${ss.element}`);
             return resultImages.screenshotDOMElement(page, {
                 path: `./results/${name}/element(${ss.element}).png`,
                 selector: ss.element,

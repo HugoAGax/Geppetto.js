@@ -1,7 +1,8 @@
-module.exports = class Test {
+export default class Test {
     constructor(params) {
         Object.assign(this, params);
         this.name = this.testName();
+        // console.log('new Puppeteer Instance created \n' + config.url + '\n');
     }
     // Getter
     testName() {

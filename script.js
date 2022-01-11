@@ -14,10 +14,12 @@ import Summary from './classes/summary.js';
 const config = JSON.parse(fs.readFileSync(process.argv.slice(2)[0]));
 const testsToRun = config.tests;
 
-async function createBrowserInstance(config) {
+async function createBrowserInstance(config, curr, total) {
+    let cwv; 
     const testSpinner = ora({
-        text: `Creating ${chalk.cyan('puppeteer.js browser instance')}...`,
-        color: 'cyan',
+        prefixText:`(${curr}/${total})`,
+        text: `Creating ${chalk.gray('puppeteer.js browser instance')}...`,
+        color: 'white',
         spinner: 'dots',
     }).start();
 
@@ -35,7 +37,7 @@ async function createBrowserInstance(config) {
     }).start();
 
     if (config.screenshots !== null) {
-        testSpinner.text = `Creating ${chalk.cyan('result images')}...`;
+        testSpinner.text = `Creating ${chalk.gray('result images')}...`;
 
         var resultImagesInstance = new ResultImages({
             page: page, 
@@ -47,7 +49,6 @@ async function createBrowserInstance(config) {
         testSpinner.stopAndPersist({
             symbol: `${chalk.hex('#33C7FF')('✓')}`,
             text: `Created ${chalk.hex('#33C7FF')('result images')}...`,
-            color: 'yellow',
             spinner: 'dots',
         });
     }
@@ -64,35 +65,47 @@ async function createBrowserInstance(config) {
         url: config.url,
         lighthouse: lighthouse,
         browser: browser,
+        outputsJson: config.lighthouseOutputsJson,
         config: config.lighthouseConfig,
         flags: lighthouseFlags
     });
 
-    testSpinner.text =`Running ${chalk.cyan('lighthouse report')}...`;
+    testSpinner.text =`Running ${chalk.gray('lighthouse report')}...`;
     testSpinner.start();
     
-    await lighthouseInstance.runInstance();
+    await lighthouseInstance.runInstance().then((data) => cwv = data);
     
     testSpinner.stopAndPersist({
         symbol: `${chalk.hex('#33C7FF')('✓')}`,
         text: `Completed ${chalk.hex('#33C7FF')('lighthouse report')}...`,
-        color: 'yellow',
         spinner: 'dots',
     });
-    // .then((data) => console.log(data));
     await browser.close();
 
+    testSpinner.stopAndPersist({
+        symbol: `${chalk.hex('#1BFF00')('✓')}`,
+        text: `Completed ${chalk.hex('#1BFF00')('test run\n\n')}`,
+        spinner: 'dots',
+    });
+    
     testSpinner.clear().stop();
+
+    return cwv;
 }
 
-async function createTestRun(test) {
-    var currentTest = new Test(test);
-    console.log(chalk.hex('#FFC300')(`Starting Test ===> ${currentTest.name}`));
+async function createTestRun(test, currentNum, total) {
+    let currentTest = new Test(test);
+    let result = {};
+
+    console.log(chalk.hex('#FFC300')(`Starting Test ---> ${currentTest.name}`));
 
     createResultDirectory(currentTest.name);
-    await createBrowserInstance(currentTest);
-    
-    console.log(chalk.hex('#FFC300')(`Ended Test ===> ${currentTest.name}\n`));
+    return await createBrowserInstance(currentTest, currentNum, total).then((output) => {
+        result.lighthouse = output;
+        result.name = currentTest.name;
+        
+        return result;
+    });
 }
 
 function createResultDirectory(name) {
@@ -105,12 +118,30 @@ function createResultDirectory(name) {
 }
 
 async function runTests(testsToRun) {
-    console.log(chalk.hex('#FF00AE')('\nGeppetto.js v1.0') + ' - Initialized\n');
+    let counter = 1;
+    console.log(chalk.hex('#FF00AE')('\nGeppetto.js v1.0') + ' - Initialized');
+    console.log(chalk.white(`${testsToRun.length} tests will be run\n`));
+
+    var geppettoSummary = new Summary({});
     
     for (const run of testsToRun) {
-        await createTestRun(run);
+        await createTestRun(run, counter, testsToRun.length).then(res => {
+            geppettoSummary.createSingleTestSummary(res.name, res.lighthouse);
+        });
+        counter++;
     }
 
-    console.log(chalk.hex('#FF00AE')('Geppetto.js v1.0') + ' - Ended\n');
+    console.log(chalk.hex('#FF6725')('\nAll Tests CWVs Summary'));
+
+    let summaryData = geppettoSummary.createDataSummary();
+    Object.keys(summaryData).forEach(section => {
+        let name = section.split('-').map(str => {
+            return str.charAt(0).toUpperCase() + str.slice(1)
+        }).join(' ');
+
+        console.log(chalk.white(name) + ' | mean: ' + chalk.hex('#33C7FF')(summaryData[section].mean));
+    });
+
+    console.log(chalk.hex('#FF00AE')('\nGeppetto.js v1.0') + ' - Ended\n');
 }
 runTests(testsToRun);

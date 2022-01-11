@@ -26,7 +26,6 @@
   "dependencies": {
     "chalk": "^5.0.0",
     "chrome": "^0.1.0",
-    "colors": "^1.4.0",
     "fs": "0.0.1-security",
     "lighthouse": "^9.1.0",
     "mz": "^2.7.0",

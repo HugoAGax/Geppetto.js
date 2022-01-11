@@ -1,7 +1,8 @@
+import lighthouse from "lighthouse";
+
 export default class LighthouseTest {
     constructor(params) {
         Object.assign(this, params);
-
         this.defaultSections = [
             'largest-contentful-paint',
             'first-meaningful-paint',
@@ -16,30 +17,20 @@ export default class LighthouseTest {
     async runInstance() {
         const lighthouseTest = this;
         return await this.lighthouse(this.url, this.flags, this.config).then(function(result) {
-            // console.log('result data', result.lhr.audits);
-            lighthouseTest.filterAuditSections(result.lhr.audits);
-            // results.push(result);
-            // fs.writeFile(`${getOutputFilename()}_${testNumber}.json`, JSON.stringify(result), () => console.log)
-            return result;
+            var highlights = lighthouseTest.filterAuditSections(result.lhr.audits);
+            if (lighthouseTest.outputsJson === true) {
+                fs.writeFile(`lighthouse-${lighthouseTest.name}.json`, JSON.stringify(result));
+            }
+            return highlights;
         });;
     }
 
     filterAuditSections(result, sections = this.defaultSections) {
         let output = {};
+        
         sections.forEach((sc) => {
             output[sc] = result[sc].numericValue
-        })
-        // console.log('OUTPUT', output);
-    }
-
-    getTestTime() {
-
-        var currentdate = new Date();
-        return currentdate.getDate() + "-"
-            + (currentdate.getMonth() + 1) + "-"
-            + currentdate.getFullYear() + " "
-            + currentdate.getHours() + "H"
-            + currentdate.getMinutes() + "M"
-            + currentdate.getSeconds();+ "S"
+        });
+        return output;
     }
 }

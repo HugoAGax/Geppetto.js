@@ -14,8 +14,14 @@ import Summary from './classes/summary.js';
 const config = JSON.parse(fs.readFileSync(process.argv.slice(2)[0]));
 const testsToRun = config.tests;
 
+runAllTests(testsToRun);
+
+function timeout(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 async function createBrowserInstance(config, curr, total) {
-    let cwv; 
+    let cwv, resultImagesInstance, lighthouseInstance; 
     const testSpinner = ora({
         prefixText:`(${curr}/${total})`,
         text: `Creating ${chalk.gray('puppeteer.js browser instance')}...`,
@@ -24,7 +30,9 @@ async function createBrowserInstance(config, curr, total) {
     }).start();
 
     const browser = await puppeteer.launch({
-        ignoreDefaultArgs: ['--disable-extensions']
+        // executablePath: '/usr/bin/chromium-browser',
+        ignoreDefaultArgs: ['--disable-extensions'],
+        // devtools: true
     });
         
     const page = await browser.newPage();
@@ -36,10 +44,12 @@ async function createBrowserInstance(config, curr, total) {
         text: `Created ${chalk.hex('#33C7FF')('puppeteer.js browser instance')}...`,
     }).start();
 
+    await timeout(10000)
+
     if (config.screenshots !== null) {
         testSpinner.text = `Creating ${chalk.gray('result images')}...`;
 
-        var resultImagesInstance = new ResultImages({
+        resultImagesInstance = new ResultImages({
             page: page, 
             name: config.name,
             screenshots: config.screenshots
@@ -52,6 +62,38 @@ async function createBrowserInstance(config, curr, total) {
             spinner: 'dots',
         });
     }
+
+    if (config.lighthouseConfig !== null) {
+        const lighthouseFlags = {
+            port: (new URL(browser.wsEndpoint())).port,
+            output: 'json',
+            logLevel: 'silent',
+            maxWaitForLoad: 60 * 1000
+        }
+    
+        lighthouseInstance = new LighthouseTest({
+            name: config.name,
+            url: config.url,
+            lighthouse: lighthouse,
+            browser: browser,
+            outputsJson: config.lighthouseOutputsJson,
+            config: config.lighthouseConfig,
+            flags: lighthouseFlags
+        });
+    
+        testSpinner.text =`Running ${chalk.gray('lighthouse report')}...`;
+        testSpinner.start();
+        
+        await lighthouseInstance.runInstance().then((data) => cwv = data);
+        
+        testSpinner.stopAndPersist({
+            symbol: `${chalk.hex('#33C7FF')('✓')}`,
+            text: `Completed ${chalk.hex('#33C7FF')('lighthouse report')}...`,
+            spinner: 'dots',
+        });
+    }
+    
+    await browser.close();
 
     const lighthouseFlags = {
         port: (new URL(browser.wsEndpoint())).port,
@@ -93,7 +135,7 @@ async function createBrowserInstance(config, curr, total) {
     return cwv;
 }
 
-async function createTestRun(test, currentNum, total) {
+async function runSingleTest(test, currentNum, total) {
     let currentTest = new Test(test);
     let result = {};
 
@@ -117,15 +159,15 @@ function createResultDirectory(name) {
     }
 }
 
-async function runTests(testsToRun) {
+async function runAllTests(testsToRun) {
     let counter = 1;
     console.log(chalk.hex('#FF00AE')('\nGeppetto.js v1.0') + ' - Initialized');
     console.log(chalk.white(`${testsToRun.length} tests will be run\n`));
 
     var geppettoSummary = new Summary({});
     
-    for (const run of testsToRun) {
-        await createTestRun(run, counter, testsToRun.length).then(res => {
+    for (const test of testsToRun) {
+        await runSingleTest(test, counter, testsToRun.length).then(res => {
             geppettoSummary.createSingleTestSummary(res.name, res.lighthouse);
         });
         counter++;
@@ -144,4 +186,7 @@ async function runTests(testsToRun) {
 
     console.log(chalk.hex('#FF00AE')('\nGeppetto.js v1.0') + ' - Ended\n');
 }
-runTests(testsToRun);
+
+function compareAgainstPastTest () {
+
+}

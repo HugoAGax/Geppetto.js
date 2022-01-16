@@ -1,6 +1,34 @@
 {
-    
+    "control": {
+        "screenshotsPath":"",
+        "resultsSummaryPath":""
+    },
     "tests": [
+        {
+            "name": "events-test",
+            "url": "https://xrcw5.csb.app/",
+            "timeout": 20000,
+            "viewport": {
+                "width": 1920,
+                "height": 1080,
+                "deviceScaleFactor": 1
+            },
+            "screenshots": [
+                {
+                    "element": ".box",
+                    "event": "colorChange"
+                }
+            ],
+            "puppeteerConfig": {
+                "viewport": {
+                    "width": 1200,
+                    "height": 1080,
+                    "deviceScaleFactor": 1
+                }
+            },
+            "lighthouseOutputsJson": false,
+            "lighthouseConfig": null
+        },
         {
             "name": "screenshots-test",
             "url": "https://placeit.net/c/design-templates/stages/illustrated-instagram-post-creator-with-a-happy-hanukkah-message-4032g",

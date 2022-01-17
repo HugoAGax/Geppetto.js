@@ -4,7 +4,12 @@ export default class Summary {
     }
 
     createSingleTestSummary(testName, values) {
+        console.log('>>>> VALUES ', values);
         this._resultData[testName] = values;
+    }
+
+    getSummaryData() {
+        return this._resultData;
     }
 
     createDataSummary() {
@@ -14,6 +19,11 @@ export default class Summary {
 
         Object.keys(this._resultData).forEach(name => {
             let test = data[name];
+
+            if (test === undefined) {
+                return;
+            }
+
             let resultSections = Object.keys(test);
             resultSections.forEach(category => {
                 if (orderedData[category] === undefined) {

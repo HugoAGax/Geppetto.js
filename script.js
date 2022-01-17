@@ -44,7 +44,11 @@ async function createBrowserInstance(config, curr, total) {
         text: `Created ${chalk.hex('#33C7FF')('puppeteer.js browser instance')}...`,
     }).start();
 
-    await timeout(10000)
+    // await timeout(10000);
+
+    await page.screenshot({
+        path: `./results/${config.name}/example.png`
+    });
 
     if (config.screenshots !== null) {
         testSpinner.text = `Creating ${chalk.gray('result images')}...`;
@@ -95,35 +99,6 @@ async function createBrowserInstance(config, curr, total) {
     
     await browser.close();
 
-    const lighthouseFlags = {
-        port: (new URL(browser.wsEndpoint())).port,
-        output: 'json',
-        logLevel: 'silent',
-        maxWaitForLoad: 60 * 1000
-    }
-
-    var lighthouseInstance = new LighthouseTest({
-        name: config.name,
-        url: config.url,
-        lighthouse: lighthouse,
-        browser: browser,
-        outputsJson: config.lighthouseOutputsJson,
-        config: config.lighthouseConfig,
-        flags: lighthouseFlags
-    });
-
-    testSpinner.text =`Running ${chalk.gray('lighthouse report')}...`;
-    testSpinner.start();
-    
-    await lighthouseInstance.runInstance().then((data) => cwv = data);
-    
-    testSpinner.stopAndPersist({
-        symbol: `${chalk.hex('#33C7FF')('✓')}`,
-        text: `Completed ${chalk.hex('#33C7FF')('lighthouse report')}...`,
-        spinner: 'dots',
-    });
-    await browser.close();
-
     testSpinner.stopAndPersist({
         symbol: `${chalk.hex('#1BFF00')('✓')}`,
         text: `Completed ${chalk.hex('#1BFF00')('test run\n\n')}`,
@@ -168,21 +143,23 @@ async function runAllTests(testsToRun) {
     
     for (const test of testsToRun) {
         await runSingleTest(test, counter, testsToRun.length).then(res => {
+            if (res.lighthouse === undefined) return;
             geppettoSummary.createSingleTestSummary(res.name, res.lighthouse);
         });
         counter++;
     }
 
-    console.log(chalk.hex('#FF6725')('\nAll Tests CWVs Summary'));
+    if (Object.keys(geppettoSummary.getSummaryData()).length) {
+        console.log(chalk.hex('#FF6725')('\nAll Tests CWVs Summary'));
+        let summaryData = geppettoSummary.createDataSummary();
+        Object.keys(summaryData).forEach(section => {
+            let name = section.split('-').map(str => {
+                return str.charAt(0).toUpperCase() + str.slice(1)
+            }).join(' ');
 
-    let summaryData = geppettoSummary.createDataSummary();
-    Object.keys(summaryData).forEach(section => {
-        let name = section.split('-').map(str => {
-            return str.charAt(0).toUpperCase() + str.slice(1)
-        }).join(' ');
-
-        console.log(chalk.white(name) + ' | mean: ' + chalk.hex('#33C7FF')(summaryData[section].mean));
-    });
+            console.log(chalk.white(name) + ' | mean: ' + chalk.hex('#33C7FF')(summaryData[section].mean));
+        });
+    }
 
     console.log(chalk.hex('#FF00AE')('\nGeppetto.js v1.0') + ' - Ended\n');
 }

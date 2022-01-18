@@ -2,14 +2,14 @@ export default class Test {
     constructor(params) {
         Object.assign(this, params);
         this.name = this.testName();
-        // console.log('new Puppeteer Instance created \n' + config.url + '\n');
+        this.dir = this.createResultDirectory(this.name);
     }
-    // Getter
+
     testName() {
         const date = this.getTestTime();
         return `${this.name}(${date})`;
     }
-    // Method
+    
     getTestTime() {
 
         var currentdate = new Date();
@@ -19,5 +19,14 @@ export default class Test {
             + currentdate.getHours() + "H"
             + currentdate.getMinutes() + "M"
             + currentdate.getSeconds();+ "S"
+    }
+
+    createResultDirectory(name) {
+        var dir = `./results/${name}`;
+    
+        if (this.fs.existsSync(dir) === false) {
+            this.fs.mkdirSync(dir, { recursive: true });
+        }
+        return dir;
     }
 }

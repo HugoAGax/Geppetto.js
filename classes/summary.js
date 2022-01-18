@@ -26,7 +26,16 @@ export default class Summary {
         Object.keys(orderedData).forEach(category => {
             orderedData[category] = summary._getSamplesCentralTendencies(orderedData[category]);
         });
+
+        console.log('Result Data', this._resultData);
+
+        console.log('Ordered Data', orderedData);
+
         return orderedData;
+    }
+
+    getResultsData() {
+        return this._resultData; 
     }
 
     _getSamplesCentralTendencies(data) {

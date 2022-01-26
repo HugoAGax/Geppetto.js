@@ -4,6 +4,7 @@ export default class LighthouseTest {
     constructor(params) {
         Object.assign(this, params);
         this.defaultSections = [
+            'first-contentful-paint',
             'largest-contentful-paint',
             'first-meaningful-paint',
             'speed-index',
@@ -11,7 +12,7 @@ export default class LighthouseTest {
             'max-potential-fid',
             'cumulative-layout-shift',
             'interactive'
-        ]
+        ];
     }
 
     async runInstance() {

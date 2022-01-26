@@ -27,10 +27,6 @@ export default class Summary {
             orderedData[category] = summary._getSamplesCentralTendencies(orderedData[category]);
         });
 
-        console.log('Result Data', this._resultData);
-
-        console.log('Ordered Data', orderedData);
-
         return orderedData;
     }
 

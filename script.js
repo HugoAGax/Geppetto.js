@@ -32,6 +32,7 @@ async function createBrowserInstance(config, curr, total) {
         
     const page = await browser.newPage();
     await page.setViewport(config.viewport);
+    await page.authenticate(config.authenticate);
     await page.goto(config.url);
 
     testSpinner.stopAndPersist({
@@ -39,7 +40,7 @@ async function createBrowserInstance(config, curr, total) {
         text: `Created ${chalk.hex('#33C7FF')('puppeteer.js browser instance')}...`,
     }).start();
 
-    if (config.screenshots !== null) {
+    if (config.screenshots !== undefined) {
         testSpinner.text = `Creating ${chalk.gray('result images')}...`;
 
         resultImagesInstance = new ResultImages({
@@ -56,7 +57,7 @@ async function createBrowserInstance(config, curr, total) {
         });
     }
 
-    if (config.lighthouseConfig !== null) {
+    if (config.lighthouseConfig !== undefined) {
         const lighthouseFlags = {
             port: (new URL(browser.wsEndpoint())).port,
             output: 'json',

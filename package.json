@@ -25,13 +25,8 @@
   "homepage": "https://github.com/HugoAGax/Geppetto.js#readme",
   "dependencies": {
     "chalk": "^5.0.0",
-    "chrome": "^0.1.0",
-    "fs": "0.0.1-security",
     "lighthouse": "^9.1.0",
-    "mz": "^2.7.0",
-    "ora": "^6.0.1",
-    "puppeteer-core": "^10.4.0",
-    "resemblejs": "^4.0.0"
+    "ora": "^6.0.1"
   },
   "devDependencies": {
     "puppeteer": "^12.0.1"

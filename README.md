@@ -1,5 +1,6 @@
 # Geppetto.js
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/f51ae90fdd5c4da0966ffe381fa67574)](https://app.codacy.com/gh/HugoAGax/Geppetto.js?utm_source=github.com&utm_medium=referral&utm_content=HugoAGax/Geppetto.js&utm_campaign=Badge_Grade_Settings)
 [![MIT License](https://img.shields.io/apm/l/atomic-design-ui.svg?)](https://github.com/HugoAGax/Geppetto.js/blob/main/LICENSE)
 
 Website testing tool based on **Puppeteer.js** that allows for the evaluation of Core Web Vitals and storing screenshots of certain elements or full page visualizations

@@ -4,6 +4,7 @@ import fs from 'fs';
 import lighthouse from 'lighthouse';
 import chalk from 'chalk';
 import ora from 'ora';
+import resemble from 'resemblejs';
 
 // Internal Modules
 import Test from './classes/test.js';

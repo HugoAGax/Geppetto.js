@@ -35,6 +35,7 @@ export default class Summary {
     }
 
     _getSamplesCentralTendencies(data) {
+        let statisticalResults;
         const asc = arr => arr.sort((a, b) => a - b);
         const sum = arr => arr.reduce((a, b) => a + b, 0);
         const mean = arr => sum(arr) / arr.length;
@@ -56,11 +57,11 @@ export default class Summary {
             }
         };
 
-        const q25 = arr => quantile(arr, .25);
-        const q50 = arr => quantile(arr, .50);
-        const q75 = arr => quantile(arr, .75);
+        const q25 = arr => quantile(arr, 0.25);
+        const q50 = arr => quantile(arr, 0.50);
+        const q75 = arr => quantile(arr, 0.75);
 
-        return {
+         statisticalResults = {
             q25: q25(data),
             q50: q50(data),
             q75: q75(data),
@@ -72,5 +73,7 @@ export default class Summary {
                 return this.q50
             }
         };
+        
+        return statisticalResults;
     }
 }

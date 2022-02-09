@@ -1,6 +1,5 @@
 export default class ResultImages {
     constructor(params) {
-        // console.log(('new Result Images FOR ' + params.name + '\n'));
         Object.assign(this, params);
     }
 
@@ -8,7 +7,6 @@ export default class ResultImages {
         const resultImages = this;
 
         return Promise.all(screenshots.map(ss => {
-            // console.log(`\tElement Screenshot :: ${ss.element}`);
             return resultImages.screenshotDOMElement(page, {
                 path: `./results/${name}/element(${ss.element}).png`,
                 selector: ss.element,
@@ -35,8 +33,8 @@ export default class ResultImages {
     
         if (!rect)
             throw Error(`Could not find element that matches selector: ${selector}.`);
-    
-        return await page.screenshot({
+        
+        let screenImg = await page.screenshot({
             path,
             clip: {
                 x: rect.left - padding,
@@ -46,5 +44,6 @@ export default class ResultImages {
             }
         });
     
+        return screenImg;
     }
 }

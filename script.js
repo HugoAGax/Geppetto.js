@@ -4,7 +4,6 @@ import fs from "fs";
 import lighthouse from "lighthouse";
 import chalk from "chalk";
 import ora from "ora";
-import resemble from "resemblejs";
 
 // Internal Modules
 import Test from "./classes/test.js";
@@ -14,6 +13,7 @@ import Summary from "./classes/summary.js";
 import ImageComparison from "./classes/image_comparison.js";
 
 const config = JSON.parse(fs.readFileSync(process.argv.slice(2)[0]));
+const controlData = config.control ? config.control : null;
 const testsToRun = config.tests;
 
 runAllTests(testsToRun);
@@ -95,6 +95,18 @@ async function createBrowserInstance(config, curr, total) {
 
   await browser.close();
 
+  if (controlData !== null) {
+    testSpinner.text = `Running ${chalk.gray("comparison with Resemble.js")}...`;
+    testSpinner.start();
+
+    await compareRunToControl("./results/" + config.name);
+    testSpinner.stopAndPersist({
+      symbol: `${chalk.hex("#33C7FF")("✓")}`,
+      text: `Completed ${chalk.hex("#33C7FF")("Resemble.js comparison")}...`,
+      spinner: "dots",
+    });
+  }
+
   testSpinner.stopAndPersist({
     symbol: `${chalk.hex("#1BFF00")("✓")}`,
     text: `Completed ${chalk.hex("#1BFF00")("test run\n\n")}`,
@@ -112,11 +124,6 @@ async function runSingleTest(test, currentNum, total) {
   test.fs = fs;
   currentTest = new Test(test);
 
-  let lala = new ImageComparison({
-    controlPath: "./results/screenshots-test(8-2-2022 22H16M3)",
-    currentPath: "./results/screenshots-test(9-2-2022 17H56M45)",
-  }).findMatchingFiles();
-  
   console.log(chalk.hex("#FFC300")(`Starting Test ---> ${currentTest.name}`));
   console.log(
     chalk
@@ -126,14 +133,20 @@ async function runSingleTest(test, currentNum, total) {
       )
   );
 
-  return await createBrowserInstance(currentTest, currentNum, total).then(
-    (output) => {
-      result.lighthouse = output;
-      result.name = currentTest.name;
+  let browserSimulationData = await createBrowserInstance(currentTest, currentNum, total);
 
-      return result;
-    }
-  );
+  return {
+    lighthouse: browserSimulationData,
+    name: currentTest.name
+  };
+}
+
+async function compareRunToControl(path) {
+    let imageCompare = new ImageComparison({
+      controlPath: controlData.path,
+      currentPath: path
+    })
+    await imageCompare.findMatchingFiles();
 }
 
 async function runAllTests(testsToRun) {

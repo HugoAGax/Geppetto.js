@@ -1,5 +1,7 @@
 {
-    
+    "control": {
+        "path": "./results/screenshots-test(9-2-2022 17H56M45)"
+    },
     "tests": [
         {
             "name": "screenshots-test",

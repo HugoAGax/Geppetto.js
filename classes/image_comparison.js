@@ -46,8 +46,6 @@ class ImageComparison {
     let newData = imageDirectories[1];
 
     var intersections = controlData.filter(e => newData.indexOf(e) !== -1);
-
-    console.log('INTERSECTIONS', intersections);
     
     for (const match of intersections) {
       await imageComparison.compareImagePairs(
@@ -60,12 +58,11 @@ class ImageComparison {
   async compareAllImages() {}
 
   async compareImagePairs(baseImage, newImage, filename) {
+    const imageCompare = this;
     const data = resemble(baseImage)
     .compareTo(newImage)
     .onComplete((data) => {
-      console.log(data);
-      fs.promises.writeFile(filename + '.png', data.getBuffer())
-      // fs.writeFile(filename + '.png', data.getBuffer());
+      fs.promises.writeFile(imageCompare.currentPath + "/compare-" + filename , data.getBuffer())
     })
   }
 }

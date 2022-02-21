@@ -31,7 +31,6 @@ class ImageComparison {
   }
 
   async findMatchingFiles() {
-    let imageComparison = this;
     let paths = await Promise.all([
       this._getDirectoryFiles(this.currentPath),
       this._getDirectoryFiles(this.controlPath),
@@ -45,13 +44,14 @@ class ImageComparison {
     let controlData = imageDirectories[0];
     let newData = imageDirectories[1];
 
-    var intersections = controlData.filter(e => newData.indexOf(e) !== -1);
-    
+    var intersections = controlData.filter((e) => newData.indexOf(e) !== -1);
+
     for (const match of intersections) {
       await imageComparison.compareImagePairs(
         imageComparison.controlPath + "/" + match,
         imageComparison.currentPath + "/" + match,
-        match);
+        match
+      );
     }
   }
 
@@ -59,11 +59,14 @@ class ImageComparison {
 
   async compareImagePairs(baseImage, newImage, filename) {
     const imageCompare = this;
-    const data = resemble(baseImage)
-    .compareTo(newImage)
-    .onComplete((data) => {
-      fs.promises.writeFile(imageCompare.currentPath + "/compare-" + filename , data.getBuffer())
-    })
+    resemble(baseImage)
+      .compareTo(newImage)
+      .onComplete((data) => {
+        fs.promises.writeFile(
+          imageCompare.currentPath + "/compare-" + filename,
+          data.getBuffer()
+        );
+      });
   }
 }
 
